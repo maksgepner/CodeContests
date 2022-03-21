@@ -66,3 +66,12 @@ py_binary(
         "@com_google_riegeli//python/riegeli",
     ],
 )
+
+py_binary(
+    name = "generate_json",
+    srcs = ["generate_json.py"],
+    deps = [
+        ":contest_problem_py_pb2",
+        "@com_google_riegeli//python/riegeli",
+    ],
+)
