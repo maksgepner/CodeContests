@@ -16,3 +16,7 @@ def _print_data(filenames):
     print(problem.name)
     print("\nProblem description:\n")
     print(problem.description)
+
+
+if __name__ == '__main__':
+  _print_data(sys.argv[1:])
