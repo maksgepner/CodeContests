@@ -75,3 +75,12 @@ py_binary(
         "@com_google_riegeli//python/riegeli",
     ],
 )
+
+py_binary(
+    name = "generate_json_small",
+    srcs = ["generate_json_small.py"],
+    deps = [
+        ":contest_problem_py_pb2",
+        "@com_google_riegeli//python/riegeli",
+    ],
+)
