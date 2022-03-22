@@ -163,7 +163,12 @@ PyTesterSandboxer::CreatePolicy(absl::string_view binary_path,
       internal::Mappings{
           .ro_files = ro_files, .ro_dirs = ro_dirs, .rw_dirs = rw_dirs});
 
+<<<<<<< HEAD
   builder.AllowSyscall(__NR_arch_prctl);
+=======
+  builder.AllowSyscall(__NR_arch_prctl); // github issue #12 solution
+
+>>>>>>> 47330685b5ebceed43d2c5fdfaff97e5f1df2afa
   builder.AllowSyscall(__NR_mprotect);
   builder.AllowSyscall(__NR_mremap);
   builder.AllowSyscall(__NR_select);

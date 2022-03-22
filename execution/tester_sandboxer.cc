@@ -462,7 +462,13 @@ sandbox2::PolicyBuilder CreateBasePolicy(absl::string_view binary,
                                          const Mappings& mappings) {
   sandbox2::PolicyBuilder builder;
 
+<<<<<<< HEAD
   builder.AllowSyscall(__NR_arch_prctl);
+=======
+
+  builder.AllowSyscall(__NR_arch_prctl); // github issue #12 solution
+
+>>>>>>> 47330685b5ebceed43d2c5fdfaff97e5f1df2afa
   // Must be before AllowStaticStartup.
   builder.AllowSyscall(__NR_readlink);
 
