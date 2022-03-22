@@ -109,12 +109,15 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
 }
 
 void ReportResults(const MultiTestResult& multi_result) {
-  std::cout << "Compilation "
+  std::cout << "Compilation "  
             << (multi_result.compilation_result.program_status ==
                         ProgramStatus::kSuccess
                     ? "succeeded"
                     : "failed")
-            << "\n";
+            << "\nThe stdout output was:\n"
+            << (multi_result.compilation_result.stdout)
+            << "\nThe stderr output was:\n"
+            << (multi_result.compilation_result.stderr);
   int i = 0;
   for (const auto& test_result : multi_result.test_results) {
     if (!test_result.passed.has_value()) {

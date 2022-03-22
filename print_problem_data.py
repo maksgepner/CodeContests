@@ -11,11 +11,14 @@ def _all_problems(filenames):
       yield problem
 
 def _print_data(filenames):
+  idx = 0
   for problem in _all_problems(filenames):
-    print("\n\n\n Problem name:\n")
+    #if idx == 0:
+    print("\n\n\n====== Problem name:\n")
     print(problem.name)
     print("\nProblem description:\n")
     print(problem.description)
+    idx += 1
 
 
 if __name__ == '__main__':
