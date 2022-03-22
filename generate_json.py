@@ -3,6 +3,7 @@ import sys
 import riegeli
 import contest_problem_pb2
 import os
+import json
 
 def _all_problems(filenames):
   """Iterates through all ContestProblems in filenames."""
@@ -20,7 +21,7 @@ def _generate_json(filenames):
         format(problem.cf_rating,\
           ', '.join(problem.cf_tags),\
           contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), problem.description)
-      data = '{{\"code\": \"{}\", \"nl\": \"{}\"}}'.format(solution.solution.replace('\n', '\\n'), nl.replace('\n', '\\n'))
+      data = json.dumps({'code': solution.solution, 'nl': nl})
       f.write(data)
       f.write('\n')
       count += 1
@@ -29,7 +30,7 @@ def _generate_json(filenames):
         format(problem.cf_rating,\
           ', '.join(problem.cf_tags),\
           contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), problem.description)
-      data = '{{\"code\": \"{}\", \"nl\": \"{}\"}}'.format(solution.solution.replace('\n', '\\n'), nl.replace('\n', '\\n'))
+      data = json.dumps({'code': solution.solution, 'nl': nl})
       f.write(data)
       f.write('\n')
       count += 1
