@@ -15,7 +15,8 @@ def _all_problems(filenames):
 def _generate_json(filenames):
   f = open(os.path.join(sys.argv[-1], os.path.splitext(os.path.basename(sys.argv[1]))[0] + '.jsonl'), 'w')
   for problem in _all_problems(filenames):
-    data = {'codes': [], 'rating': problem.cf_rating, 'tags': ', '.join(problem.cf_tags), 'problem': problem.description}
+    problem_description = problem.description
+    data = {'codes': [], 'rating': problem.cf_rating, 'tags': ', '.join(problem.cf_tags), 'problem': problem_description}
     for solution in problem.solutions:
       data['codes'].append({'code': solution.solution, 'language': contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), 'is_correct': True})
     for solution in problem.incorrect_solutions:
