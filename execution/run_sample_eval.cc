@@ -41,43 +41,35 @@
 #include <json/value.h>
 #include <fstream>
 
-ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
+ABSL_FLAG(std::string, test_path, "", "Path to test dataset.");
 
 namespace deepmind::code_contests {
 namespace {
 
-constexpr absl::string_view kGoodSolution = R"py(
-t = int(input())
-while t:
-  n = int(input())
-  print(2, n-1)
-  t -= 1
-)py";
+std::vector<absl::string_view> sample_solutions;
+std::ifstream sample_solutions_file("sample_solutions.json", std::ifstream::binary);
+sample_solution_file >> sample_solutions;
 
-constexpr absl::string_view kBadSolution = R"py(
-t = int(input())
-while t:
-  n = int(input())
-  if n > 20:
-    print(1, 1)
-  else:
-    print(2, n-1)
-  t -= 1
-)py";
+// REMEMBER TO SPECIFY WHICH LANGUAGE IT IS INSIDE OF EACH STRING_VIEW SOLUTION
 
-constexpr absl::string_view kInvalidSolution = ")";
+// NOT SURE IF NEED TO HAVE EACH kSolution as 'constexpr'? can add to for loop later?
+//constexpr absl::string_view kSolution = R"py(
+//LOAD THE ACTUAL CODE INTO HERE
+//)py";
 
-absl::StatusOr<ContestProblem> FindGregorAndCryptography(
+std::string target_problem_name = // DEFINE THE DESIRED PROBLEM HERE as a string;
+
+absl::StatusOr<ContestProblem> FindProblem(
     const absl::string_view filename) {
   riegeli::RecordReader<riegeli::FdReader<>> reader(
       std::forward_as_tuple(filename));
   ContestProblem problem;
   while (reader.ReadRecord(problem)) {
-    if (problem.name() == "1549_A. Gregor and Cryptography") return problem;
+    if (problem.name() == target_problem_name) return problem;
   }
+  std::cout << "Problem " << target_problem_name
   return absl::NotFoundError(
-      "Gregor and Cryptography problem not found. Did you pass the "
-      "validation dataset?");
+      " not found inside of the test dataset");
 }
 
 std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
@@ -118,10 +110,10 @@ void ReportResults(const MultiTestResult& multi_result) {
                         ProgramStatus::kSuccess
                     ? "succeeded"
                     : "failed")
-            << "\nThe stdout output was:\n"
-            << (multi_result.compilation_result.stdout)
-            << "\nThe stderr output was:\n"
-            << (multi_result.compilation_result.stderr);
+            //<< "\nThe stdout output was:\n"
+            //<< (multi_result.compilation_result.stdout)
+            //<< "\nThe stderr output was:\n"
+            //<< (multi_result.compilation_result.stderr);
   int i = 0;
   for (const auto& test_result : multi_result.test_results) {
     if (!test_result.passed.has_value()) {
@@ -135,15 +127,15 @@ void ReportResults(const MultiTestResult& multi_result) {
   }
 }
 
-absl::Status SolveGregorAndCryptography(
-    const absl::string_view valid_filename) {
-  ASSIGN_OR_RETURN(ContestProblem gregor_and_cryptography,
-                   FindGregorAndCryptography(valid_filename));
+absl::Status SolveProblem(
+    const absl::string_view test_filename) {
+  ASSIGN_OR_RETURN(ContestProblem problem_filename,
+                   FindProblem(test_filename));
   const std::vector<absl::string_view> inputs =
-      GetInputs(gregor_and_cryptography,
+      GetInputs(problem_filename,
                 /*max_size=*/10);
   const std::vector<absl::string_view> outputs =
-      GetOutputs(gregor_and_cryptography,
+      GetOutputs(problem_filename,
                  /*max_size=*/10);
 
   Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
@@ -151,43 +143,20 @@ absl::Status SolveGregorAndCryptography(
   options.num_threads = 4;
   options.stop_on_first_failure = true;
 
-  std::cout << R"(We will try to solve "Gregor and Cryptography":
-https://codeforces.com/problemset/problem/1549/A
+  std::cout << R"(Trying to solve the selected problem.
 
-We will run:
-  1. A program that does not compile.
-  2. A program that runs successfully, but gives the wrong answer sometimes.
-  3. A correct solution.
-
---------------------------------------------------------------------------------
-An invalid program is reported as not compiling:
-
-)";
-  ASSIGN_OR_RETURN(MultiTestResult invalid_result,
-                   tester.Test(kInvalidSolution, inputs, options, outputs));
-  ReportResults(invalid_result);
-
-  std::cout << R"(
---------------------------------------------------------------------------------
-The bad solution passes a few tests but then fails.
-Because we set stop_on_first_failure to True, we stop once we see a failure.
-We are running on 4 threads, so it's possible that more than one failure occurs
-before all threads stop.
-
-)";
-  ASSIGN_OR_RETURN(MultiTestResult bad_result,
-                   tester.Test(kBadSolution, inputs, options, outputs));
-  ReportResults(bad_result);
-
-  std::cout << R"(
---------------------------------------------------------------------------------
-The good solution passes all tests.
+There are 3 options for the outcome of the tests:
+  1. The program does not compile.
+  2. The program runs successfully, but gives the wrong answer sometimes.
+  3. The program runs successfully and gives the correct answer in all the tests.
 
 )";
 
-  ASSIGN_OR_RETURN(MultiTestResult good_result,
-                   tester.Test(kGoodSolution, inputs, options, outputs));
-  ReportResults(good_result);
+  for (constexpr absl::string_view kSolution : sample_solutions) {
+    ASSIGN_OR_RETURN(MultiTestResult result_output,
+                    tester.Test(kSolution, inputs, options, outputs));
+    ReportResults(result_output);
+  }
 
   return absl::OkStatus();
 }
@@ -197,14 +166,9 @@ The good solution passes all tests.
 
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
-  if (absl::Status status = deepmind::code_contests::SolveGregorAndCryptography(
-          absl::GetFlag(FLAGS_valid_path));
+  if (absl::Status status = deepmind::code_contests::SolveProblem(
+          absl::GetFlag(FLAGS_test_path));
       !status.ok()) {
     std::cerr << "Failed: " << status.message() << std::endl;
   }
-  std::vector<absl::string_view> sample_solutions;
-  std::ifstream sample_solutions_file("sample_solutions.jsonl", std::ifstream::binary);
-  //sample_solution_file >> sample_solutions;
-
-  //std::cout << sample_solutions
 }
