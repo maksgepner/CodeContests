@@ -1,2 +1,4 @@
 data/
 bazel-*
+code_contests_test.jsonl
+*.json*

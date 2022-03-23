@@ -38,7 +38,7 @@
 #include "riegeli/records/record_reader.h"
 
 // For .json processing
-#include <json/value.h>
+#include "json.h"
 #include <fstream>
 
 ABSL_FLAG(std::string, test_path, "", "Path to test dataset.");
@@ -46,31 +46,18 @@ ABSL_FLAG(std::string, test_path, "", "Path to test dataset.");
 namespace deepmind::code_contests {
 namespace {
 
-std::vector<absl::string_view> sample_solutions;
-std::ifstream sample_solutions_file("sample_solutions.json", std::ifstream::binary);
-sample_solution_file >> sample_solutions;
-
-// REMEMBER TO SPECIFY WHICH LANGUAGE IT IS INSIDE OF EACH STRING_VIEW SOLUTION
-
-// NOT SURE IF NEED TO HAVE EACH kSolution as 'constexpr'? can add to for loop later?
-//constexpr absl::string_view kSolution = R"py(
-//LOAD THE ACTUAL CODE INTO HERE
-//)py";
-
-std::string target_problem_name = // DEFINE THE DESIRED PROBLEM HERE as a string;
-
-absl::StatusOr<ContestProblem> FindProblem(
-    const absl::string_view filename) {
-  riegeli::RecordReader<riegeli::FdReader<>> reader(
-      std::forward_as_tuple(filename));
-  ContestProblem problem;
-  while (reader.ReadRecord(problem)) {
-    if (problem.name() == target_problem_name) return problem;
-  }
-  std::cout << "Problem " << target_problem_name
-  return absl::NotFoundError(
-      " not found inside of the test dataset");
-}
+// absl::StatusOr<ContestProblem> FindProblem(
+//     const absl::string_view filename) {
+//   riegeli::RecordReader<riegeli::FdReader<>> reader(
+//       std::forward_as_tuple(filename));
+//   ContestProblem problem;
+//   while (reader.ReadRecord(problem)) {
+//     if (problem.name() == target_problem_name) return problem;
+//   }
+//   std::cout << "Problem " << target_problem_name
+//   return absl::NotFoundError(
+//       " not found inside of the test dataset");
+// }
 
 std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
                                          int max_size) {
@@ -109,7 +96,7 @@ void ReportResults(const MultiTestResult& multi_result) {
             << (multi_result.compilation_result.program_status ==
                         ProgramStatus::kSuccess
                     ? "succeeded"
-                    : "failed")
+                    : "failed");
             //<< "\nThe stdout output was:\n"
             //<< (multi_result.compilation_result.stdout)
             //<< "\nThe stderr output was:\n"
@@ -129,14 +116,14 @@ void ReportResults(const MultiTestResult& multi_result) {
 
 absl::Status SolveProblem(
     const absl::string_view test_filename) {
-  ASSIGN_OR_RETURN(ContestProblem problem_filename,
-                   FindProblem(test_filename));
-  const std::vector<absl::string_view> inputs =
-      GetInputs(problem_filename,
-                /*max_size=*/10);
-  const std::vector<absl::string_view> outputs =
-      GetOutputs(problem_filename,
-                 /*max_size=*/10);
+  // ASSIGN_OR_RETURN(ContestProblem problem_filename,
+  //                  FindProblem(test_filename));
+  // const std::vector<absl::string_view> inputs =
+  //     GetInputs(problem_filename,
+  //               /*max_size=*/10);
+  // const std::vector<absl::string_view> outputs =
+  //     GetOutputs(problem_filename,
+  //                /*max_size=*/10);
 
   Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
   TestOptions options;
@@ -166,6 +153,25 @@ There are 3 options for the outcome of the tests:
 
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
+
+  std::vector<absl::string_view> sample_solutions;
+  std::ifstream sample_solutions_file("sample_solutions.json", std::ifstream::binary);
+
+  for( std::string line; getline( sample_solutions_file, line ); ) {
+    printf("%s\n", line);
+  }
+
+  // sample_solution_file >> sample_solutions;
+
+  // REMEMBER TO SPECIFY WHICH LANGUAGE IT IS INSIDE OF EACH STRING_VIEW SOLUTION
+
+  // NOT SURE IF NEED TO HAVE EACH kSolution as 'constexpr'? can add to for loop later?
+  //constexpr absl::string_view kSolution = R"py(
+  //LOAD THE ACTUAL CODE INTO HERE
+  //)py";
+
+  std::string target_problem_name = "";// DEFINE THE DESIRED PROBLEM HERE as a string;
+
   if (absl::Status status = deepmind::code_contests::SolveProblem(
           absl::GetFlag(FLAGS_test_path));
       !status.ok()) {

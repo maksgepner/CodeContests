@@ -80,6 +80,11 @@ cc_library(
     deps = ["@com_google_absl//absl/flags:flag"],
 )
 
+cc_library(
+    name = "json",
+    hdrs = ["nlohmann/json.hpp"],
+)
+
 cc_binary(
     name = "solve_example",
     srcs = ["solve_example.cc"],
@@ -88,6 +93,7 @@ cc_binary(
         ":py_tester_sandboxer",
         ":status_macros",
         ":tester_sandboxer",
+        ":json",
         "//:contest_problem_cc_proto",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
@@ -149,6 +155,7 @@ cc_binary(
         ":py_tester_sandboxer",
         ":status_macros",
         ":tester_sandboxer",
+        ":json",
         "//:contest_problem_cc_proto",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",

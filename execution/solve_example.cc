@@ -38,8 +38,12 @@
 #include "riegeli/records/record_reader.h"
 
 // For .json processing
-#include <json/value.h>
+//#include <json.hpp>
+#include "execution/nlohmann/json.hpp"
+// for convenience
 #include <fstream>
+
+using json = nlohmann::json;
 
 ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
 
