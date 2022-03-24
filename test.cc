@@ -49,6 +49,12 @@
 // }  // namespace
 
 // int main(int argc, char* argv[]) {
+int test(int a) {
+
+    std::cout << 2;
+    return a;
+}
+
 int main() {
   // std::vector<absl::string_view> filenames;
   // filenames.reserve(argc - 1);
@@ -56,5 +62,6 @@ int main() {
   //   filenames.push_back(argv[i]);
   // }
   // PrintNames(filenames);
-  std::cout << "Hello world 2\n";
+  std::cout << test(4);
+  std::cout << "Hello world 2\n" << std::endl;
 }

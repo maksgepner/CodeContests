@@ -46,18 +46,18 @@ ABSL_FLAG(std::string, test_path, "", "Path to test dataset.");
 namespace deepmind::code_contests {
 namespace {
 
-// absl::StatusOr<ContestProblem> FindProblem(
-//     const absl::string_view filename) {
-//   riegeli::RecordReader<riegeli::FdReader<>> reader(
-//       std::forward_as_tuple(filename));
-//   ContestProblem problem;
-//   while (reader.ReadRecord(problem)) {
-//     if (problem.name() == target_problem_name) return problem;
-//   }
-//   std::cout << "Problem " << target_problem_name
-//   return absl::NotFoundError(
-//       " not found inside of the test dataset");
-// }
+absl::StatusOr<ContestProblem> FindProblem(
+    const absl::string_view filename) {
+  riegeli::RecordReader<riegeli::FdReader<>> reader(
+      std::forward_as_tuple(filename));
+  ContestProblem problem;
+  while (reader.ReadRecord(problem)) {
+    if (problem.name() == target_problem_name) return problem;
+  }
+  std::cout << "Problem " << target_problem_name
+  return absl::NotFoundError(
+      " not found inside of the test dataset");
+}
 
 std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
                                          int max_size) {
@@ -154,14 +154,16 @@ There are 3 options for the outcome of the tests:
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
-  std::vector<absl::string_view> sample_solutions;
-  std::ifstream sample_solutions_file("sample_solutions.json", std::ifstream::binary);
+  std::ifstream sample_solutions_file("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/sample_solutions.jsonl");
+	json sample_solutions;
+  sample_solutions_file >> sample_solutions;
 
-  for( std::string line; getline( sample_solutions_file, line ); ) {
-    printf("%s\n", line);
-  }
+	json target_problem_name = sample_solutions["problem_name"].get<std::string>();
+	// std::cout << "\nProblem name: " << target_problem_name << "\n";
 
-  // sample_solution_file >> sample_solutions;
+  // for( std::string line; getline( sample_solutions_file, line ); ) {
+  //   printf("%s\n", line);
+  // }
 
   // REMEMBER TO SPECIFY WHICH LANGUAGE IT IS INSIDE OF EACH STRING_VIEW SOLUTION
 
@@ -169,8 +171,6 @@ int main(int argc, char* argv[]) {
   //constexpr absl::string_view kSolution = R"py(
   //LOAD THE ACTUAL CODE INTO HERE
   //)py";
-
-  std::string target_problem_name = "";// DEFINE THE DESIRED PROBLEM HERE as a string;
 
   if (absl::Status status = deepmind::code_contests::SolveProblem(
           absl::GetFlag(FLAGS_test_path));
