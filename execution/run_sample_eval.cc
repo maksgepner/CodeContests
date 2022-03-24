@@ -38,8 +38,9 @@
 #include "riegeli/records/record_reader.h"
 
 // For .json processing
-#include "json.h"
+#include "nlohmann/json.hpp"
 #include <fstream>
+using json = nlohmann::json;
 
 ABSL_FLAG(std::string, test_path, "", "Path to test dataset.");
 
@@ -47,14 +48,14 @@ namespace deepmind::code_contests {
 namespace {
 
 absl::StatusOr<ContestProblem> FindProblem(
-    const absl::string_view filename) {
+    const absl::string_view filename, std::string target_problem_name) {
   riegeli::RecordReader<riegeli::FdReader<>> reader(
       std::forward_as_tuple(filename));
   ContestProblem problem;
   while (reader.ReadRecord(problem)) {
     if (problem.name() == target_problem_name) return problem;
   }
-  std::cout << "Problem " << target_problem_name
+  std::cout << "Problem " << target_problem_name;
   return absl::NotFoundError(
       " not found inside of the test dataset");
 }
@@ -92,15 +93,17 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
 }
 
 void ReportResults(const MultiTestResult& multi_result) {
-  std::cout << "Compilation "  
+  std::cout << "\nCompilation "  
             << (multi_result.compilation_result.program_status ==
                         ProgramStatus::kSuccess
                     ? "succeeded"
-                    : "failed");
+                    : "failed")
             //<< "\nThe stdout output was:\n"
             //<< (multi_result.compilation_result.stdout)
             //<< "\nThe stderr output was:\n"
             //<< (multi_result.compilation_result.stderr);
+            << "\n";
+
   int i = 0;
   for (const auto& test_result : multi_result.test_results) {
     if (!test_result.passed.has_value()) {
@@ -115,15 +118,18 @@ void ReportResults(const MultiTestResult& multi_result) {
 }
 
 absl::Status SolveProblem(
-    const absl::string_view test_filename) {
-  // ASSIGN_OR_RETURN(ContestProblem problem_filename,
-  //                  FindProblem(test_filename));
-  // const std::vector<absl::string_view> inputs =
-  //     GetInputs(problem_filename,
-  //               /*max_size=*/10);
-  // const std::vector<absl::string_view> outputs =
-  //     GetOutputs(problem_filename,
-  //                /*max_size=*/10);
+    const absl::string_view test_filename, json solutions) {
+
+  std::string problem_name = solutions["problem_name"].get<std::string>();
+  
+  ASSIGN_OR_RETURN(ContestProblem problem_being_solved,
+                   FindProblem(test_filename, problem_name));
+  const std::vector<absl::string_view> inputs =
+      GetInputs(problem_being_solved,
+                /*max_size=*/10);
+  const std::vector<absl::string_view> outputs =
+      GetOutputs(problem_being_solved,
+                 /*max_size=*/10);
 
   Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
   TestOptions options;
@@ -139,11 +145,20 @@ There are 3 options for the outcome of the tests:
 
 )";
 
-  for (constexpr absl::string_view kSolution : sample_solutions) {
-    ASSIGN_OR_RETURN(MultiTestResult result_output,
-                    tester.Test(kSolution, inputs, options, outputs));
-    ReportResults(result_output);
+  int i = 0;
+  for (json soln : solutions["generated_solutions"]) {
+    std::string soln_lang = soln["language"].get<std::string>();
+    // absl::string_view soln_code = soln["code"].get<absl::string_view>();
+    // std::cout << "\n\n\nSolution " << i << ", code (" << soln_lang << "):\n-------------------------\n" << soln_code;
+    if (soln_lang == "python3") {
+      absl::string_view soln_code = soln["code"].get<absl::string_view>();
+      ASSIGN_OR_RETURN(MultiTestResult result_output,
+                    tester.Test(soln_code, inputs, options, outputs));
+      ReportResults(result_output);
+    }
+    ++i;
   }
+  
 
   return absl::OkStatus();
 }
@@ -158,22 +173,8 @@ int main(int argc, char* argv[]) {
 	json sample_solutions;
   sample_solutions_file >> sample_solutions;
 
-	json target_problem_name = sample_solutions["problem_name"].get<std::string>();
-	// std::cout << "\nProblem name: " << target_problem_name << "\n";
-
-  // for( std::string line; getline( sample_solutions_file, line ); ) {
-  //   printf("%s\n", line);
-  // }
-
-  // REMEMBER TO SPECIFY WHICH LANGUAGE IT IS INSIDE OF EACH STRING_VIEW SOLUTION
-
-  // NOT SURE IF NEED TO HAVE EACH kSolution as 'constexpr'? can add to for loop later?
-  //constexpr absl::string_view kSolution = R"py(
-  //LOAD THE ACTUAL CODE INTO HERE
-  //)py";
-
   if (absl::Status status = deepmind::code_contests::SolveProblem(
-          absl::GetFlag(FLAGS_test_path));
+          absl::GetFlag(FLAGS_test_path), sample_solutions);
       !status.ok()) {
     std::cerr << "Failed: " << status.message() << std::endl;
   }

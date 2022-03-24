@@ -15,13 +15,14 @@ def _all_problems(filenames):
 def _generate_json(filenames):
   f = open(os.path.join(sys.argv[-1], os.path.splitext(os.path.basename(sys.argv[1]))[0] + '.jsonl'), 'w')
   for problem in _all_problems(filenames):
-    data = {'problem_name': problem.name, 'generated_solutions': []}
-    for solution in problem.solutions:
-      data['generated_solutions'].append({'code': solution.solution, 'language': contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), 'is_correct': True})
-    for solution in problem.incorrect_solutions:
-      data['generated_solutions'].append({'code': solution.solution, 'language': contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), 'is_correct': False})
-    f.write(json.dumps(data))
-    f.write('\n')
+    if problem.name == "1549_A. Gregor and Cryptography":
+      data = {'problem_name': problem.name, 'generated_solutions': []}
+      for solution in problem.solutions:
+        data['generated_solutions'].append({'code': solution.solution, 'language': contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), 'is_correct': True})
+      for solution in problem.incorrect_solutions:
+        data['generated_solutions'].append({'code': solution.solution, 'language': contest_problem_pb2.ContestProblem.Solution.Language.Name(solution.language).lower(), 'is_correct': False})
+      f.write(json.dumps(data))
+      f.write('\n')
   f.flush()
   f.close()
 
