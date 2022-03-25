@@ -20,42 +20,41 @@
 //   print_names /path/to/dataset/code_contests_train*
 
 #include <iostream>
-#include <tuple>
-#include <vector>
+// #include <tuple>
+// #include <vector>
 
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "contest_problem.pb.h"
-#include "riegeli/bytes/fd_reader.h"
-#include "riegeli/records/record_reader.h"
+// #include "absl/strings/string_view.h"
+// #include "absl/types/span.h"
+// #include "contest_problem.pb.h"
+// #include "riegeli/bytes/fd_reader.h"
+// #include "riegeli/records/record_reader.h"
 
-namespace {
+// namespace {
 
-using ::deepmind::code_contests::ContestProblem;
+// using ::deepmind::code_contests::ContestProblem;
 
-void PrintNames(const absl::Span<const absl::string_view> filenames) {
-  for (const absl::string_view filename : filenames) {
-    riegeli::RecordReader<riegeli::FdReader<>> reader(
-        std::forward_as_tuple(filename));
-    ContestProblem problem;
-    while (reader.ReadRecord(problem)) {
-      //if (std::find(std::begin(ourArray), std::end(ourArray), problem.name()) != std::end(ourArray))
-      //{
-      std::cout << problem.name() << '\n';
-      //std::cout << 'placeholder text\n';
-      //}
-    }
-    reader.Close();
-  }
-}
+// void PrintNames(const absl::Span<const absl::string_view> filenames) {
+// //   for (const absl::string_view filename : filenames) {
+// //     riegeli::RecordReader<riegeli::FdReader<>> reader(
+// //         std::forward_as_tuple(filename));
+// //     ContestProblem problem;
+// //     while (reader.ReadRecord(problem)) {
+// //       std::cout << problem.name() << '\n';
+//   std::cout << "Hello world!\n";
+// //     }
+// //     reader.Close();
+// //   }
+// }
 
-}  // namespace
+// }  // namespace
 
-int main(int argc, char* argv[]) {
-  std::vector<absl::string_view> filenames;
-  filenames.reserve(argc - 1);
-  for (int i = 1; i < argc; ++i) {
-    filenames.push_back(argv[i]);
-  }
-  PrintNames(filenames);
+// int main(int argc, char* argv[]) {
+int main() {
+  // std::vector<absl::string_view> filenames;
+  // filenames.reserve(argc - 1);
+  // for (int i = 1; i < argc; ++i) {
+  //   filenames.push_back(argv[i]);
+  // }
+  // PrintNames(filenames);
+  std::cout << "Hello world 2\n";
 }

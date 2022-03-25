@@ -22,6 +22,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include "nlohmann/json.hpp"
+#include <fstream>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/flag.h"
@@ -37,11 +39,6 @@
 #include "riegeli/bytes/fd_reader.h"
 #include "riegeli/records/record_reader.h"
 
-// For .json processing
-//#include <json.hpp>
-#include "execution/nlohmann/json.hpp"
-// for convenience
-#include <fstream>
 
 using json = nlohmann::json;
 
@@ -50,15 +47,20 @@ ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
 namespace deepmind::code_contests {
 namespace {
 
-constexpr absl::string_view kGoodSolution = R"py(
-t = int(input())
-while t:
-  n = int(input())
-  print(2, n-1)
-  t -= 1
-)py";
+// constexpr absl::string_view kGoodSolution = R"py(
+// t = int(input())
+// while t:
+//   n = int(input())
+//   print(2, n-1)
+//   t -= 1
+// )py";
 
-constexpr absl::string_view kBadSolution = R"py(
+
+// Obtained from CodeContests solutions
+constexpr absl::string_view kGoodSolution = R"py(
+for i in range(int(input())):
+    p = int(input())
+    print(2,p-1)
 t = int(input())
 while t:
   n = int(input())
@@ -68,6 +70,46 @@ while t:
     print(2, n-1)
   t -= 1
 )py";
+
+constexpr absl::string_view kBadSolution = R"py(
+from collections import *
+from math import *
+
+TT=int(input())
+for y in range(TT):
+    n=int(input())
+    #n,m=map(int,input().split())
+    #lst=list(map(int,input().split()))
+    #s=input()
+    foo=0
+    for i in range(2,10):
+        for j in range(2,10):
+            if (n%i)==(n%j) and (i!=j):
+                print(i,j)
+                foo=1
+                break
+        if foo:
+            break
+t = int(input())
+while t:
+  n = int(input())
+  if n > 20:
+    print(1, 1)
+  else:
+    print(2, n-1)
+  t -= 1
+)py";
+
+// constexpr absl::string_view kBadSolution = R"py(
+// t = int(input())
+// while t:
+//   n = int(input())
+//   if n > 20:
+//     print(1, 1)
+//   else:
+//     print(2, n-1)
+//   t -= 1
+// )py";
 
 constexpr absl::string_view kInvalidSolution = ")";
 
@@ -188,6 +230,37 @@ before all threads stop.
 The good solution passes all tests.
 
 )";
+
+  // // Import the .json file
+  // std::ifstream sample_solutions_file("/home/maksgepner/CodeGenerationAnalysis/CodeContests/gregor_and_cryptography_solutions.jsonl");
+  // json sample_solutions;
+  // sample_solutions_file >> sample_solutions;
+
+  // // For getting the code solutions
+  // int i = 0;
+  // int i_chosen = 0;
+  // std::string soln_lang;
+  // std::string target_language = "python3";
+  // std::string soln_correct;
+  // absl::string_view soln_code;
+
+  // for (json soln : sample_solutions["generated_solutions"]) {
+  //   soln_lang = soln["language"].get<std::string>();
+  //   if (soln["is_correct"].get<bool>() == true) {
+  //     soln_correct = "correct";
+  //   } else {
+  //     soln_correct = "incorrect";
+  //   }
+  //   // absl::string_view soln_code = soln["code"].get<absl::string_view>();
+  //   // std::cout << "\n\n\nSolution " << i << ", code (" << soln_lang << "):\n-------------------------\n" << soln_code;
+  //   if (soln_lang == target_language && soln_correct == "correct") {
+  //     soln_code = soln["code"].get<absl::string_view>();
+  //     i_chosen = i;
+  //   }
+  //   ++i;
+  // }
+
+  // absl::string_view kGoodSolution = soln_code;
 
   ASSIGN_OR_RETURN(MultiTestResult good_result,
                    tester.Test(kGoodSolution, inputs, options, outputs));

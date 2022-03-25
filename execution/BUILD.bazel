@@ -166,4 +166,26 @@ cc_binary(
         "@com_google_riegeli//riegeli/bytes:fd_reader",
         "@com_google_riegeli//riegeli/records:record_reader",
     ],
+
+)
+
+cc_binary(
+    name = "test_json_lib",
+    srcs = ["test_json_lib.cc"],
+    deps = [
+        ":py_locations",
+        ":py_tester_sandboxer",
+        ":status_macros",
+        ":tester_sandboxer",
+        ":json",
+        "//:contest_problem_cc_proto",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+        "@com_google_riegeli//riegeli/bytes:fd_reader",
+        "@com_google_riegeli//riegeli/records:record_reader",
+    ],
 )
