@@ -61,6 +61,9 @@ json test_results;
 json solutions;
 std::string soln_lang;
 
+int number_passed_problems = 0;
+int number_evaluated_problems = 0;
+
 absl::StatusOr<ContestProblem> FindProblem(
     const absl::string_view filename, std::string target_problem_name) {
   riegeli::RecordReader<riegeli::FdReader<>> reader(
@@ -172,13 +175,25 @@ json calculate_metrics(json single_problem) {
   // std::cout << "\n" << problem["problem"] << ":\nn = " \
   //   << n << ", c = " << c << "\n\n";
 
-  bool pass = false;
+  bool pass_at_k_passed = false;
+  bool ten_at_k_passed = false;
 
+
+  // pass@k = k@k (only 1 pass needed from the whole sample)
   if (c >= 0) {
-    pass = true;
+    pass_at_k_passed = true;
+    ++number_passed_problems;
   }
+  single_problem["test_metrics"]["pass_at_k_passed"] = pass_at_k_passed;
+  
+  // 10@k – implementation of appropriate clustering method needed
+  // (take 10 from the sample pool, then check if at least one passed tests
+  // if (c_cluster >= 0) {
+  //   ten_at_k_passed = true;
+  // }
+  // single_problem["test_metrics"]["ten_at_k_pass"] = ten_at_k_passed;
 
-  single_problem["test_metrics"]["pass_at_k"] = pass;
+  
   single_problem["test_metrics"]["sample_size"] = n;
   single_problem["test_metrics"]["number_passes"] = c;
 
@@ -275,6 +290,8 @@ There are 3 options for the outcome of the tests:
   // exclude from output if no solutions in supported language were found
   if (single_problem_results.size() != 1) {
     results.push_back(single_problem_results);
+    ++number_evaluated_problems;
+  } else {
     std::cout << "\nNo solutions in a supported language were found!\n";
   }
   
@@ -313,6 +330,11 @@ int main(int argc, char* argv[]) {
     std::cerr << "Failed: " << status.message() << std::endl;
     }
   }
+
+  double pass_at_k = deepmind::code_contests::number_passed_problems \
+    / deepmind::code_contests::number_evaluated_problems;
+
+  std::cout << "\n\n\nExperiments finished.\nFinal pass@k = " << pass_at_k << "\n";
 
   // deepmind::code_contests::calculate_metrics();
   
