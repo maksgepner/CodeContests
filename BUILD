@@ -68,22 +68,22 @@ py_binary(
 )
 
 py_binary(
-    name = "generate_json",
-    srcs = ["generate_json.py"],
+    name = "generate_dataset_json",
+    srcs = ["generate_dataset_json.py"],
     deps = [
         ":contest_problem_py_pb2",
         "@com_google_riegeli//python/riegeli",
     ],
 )
 
-py_binary(
-    name = "generate_json_small",
-    srcs = ["generate_json_small.py"],
-    deps = [
-        ":contest_problem_py_pb2",
-        "@com_google_riegeli//python/riegeli",
-    ],
-)
+# py_binary(
+#     name = "generate_json_small",
+#     srcs = ["generate_json_small.py"],
+#     deps = [
+#         ":contest_problem_py_pb2",
+#         "@com_google_riegeli//python/riegeli",
+#     ],
+# )
 
 cc_binary(
     name = "print_problems",
