@@ -24,6 +24,7 @@
 #include <vector>
 #include <sstream>
 #include <filesystem>
+#include <numeric> // for std::iota
 
 #include "absl/flags/parse.h"
 #include "absl/flags/flag.h"
@@ -53,7 +54,7 @@ namespace {
 int cnt_crashed_tests;
 int cnt_passed_tests;
 int cnt_failed_tests;
-bool debug = true;
+bool debug = false;
 json results;
 // json single_problem_results;
 json all_problem_samples;
@@ -334,7 +335,26 @@ int main(int argc, char* argv[]) {
   double pass_at_k = deepmind::code_contests::number_passed_problems \
     / deepmind::code_contests::number_evaluated_problems;
 
-  std::cout << "\n\n\nExperiments finished.\nFinal pass@k = " << pass_at_k << "\n";
+  int n = 200;
+  int k = deepmind::code_contests::number_evaluated_problems;
+  int c = deepmind::code_contests::number_passed_problems;
+
+  double codex_pass_at_k;
+
+  if (n - c < k) {
+    codex_pass_at_k = 1.0;
+  } else {
+    double prod = 1;
+    for (double i = n - c + 1; i < n + 1; i++) {
+      prod = prod * (1 - k / i);
+      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+    }
+    codex_pass_at_k = 1 - prod;
+  }
+
+  std::cout << "\n\n\nExperiments finished.\n";
+  std::cout << "Alphacode pass@k = " << pass_at_k << "\n";
+  std::cout << "(n = 200) Codex pass@k = " << codex_pass_at_k << "\n";
 
   // deepmind::code_contests::calculate_metrics();
   
