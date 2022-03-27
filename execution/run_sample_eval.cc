@@ -24,7 +24,9 @@
 #include <vector>
 #include <sstream>
 #include <filesystem>
-#include <numeric> // for std::iota
+#include <algorithm>
+#include <random>
+#include <iterator>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/flag.h"
@@ -61,8 +63,11 @@ json all_problem_samples;
 json test_results;
 json solutions;
 std::string soln_lang;
+int num_public_tests;
+int cnt_passed_public_tests;
 
 int number_passed_problems = 0;
+int number_passed_ten_at_k_problems = 0;
 int number_evaluated_problems = 0;
 
 absl::StatusOr<ContestProblem> FindProblem(
@@ -84,6 +89,11 @@ std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
   for (const auto& test : problem.public_tests()) {
     inputs.push_back(test.input());
   }
+
+  // Used to find which solutions passed all public tests (for 10@k clustering)
+  num_public_tests = inputs.size();
+  // std::cout << "\nThe number of public_tests is: " << inputs.size()  << "\n";
+
   for (const auto& test : problem.private_tests()) {
     inputs.push_back(test.input());
   }
@@ -94,7 +104,7 @@ std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
     inputs.resize(max_size);
   }
 
-  inputs.resize(max_size);
+  // inputs.resize(max_size);
   return inputs;
 }
 
@@ -113,7 +123,7 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
   if (debug == true) {
     outputs.resize(max_size);
   }
-  outputs.resize(max_size);
+  // outputs.resize(max_size);
   return outputs;
 }
 
@@ -137,6 +147,7 @@ void ReportResults(const MultiTestResult& multi_result) {
   cnt_crashed_tests = 0;
   cnt_passed_tests = 0;
   cnt_failed_tests = 0;
+  cnt_passed_public_tests = 0;
 
   for (const auto& test_result : multi_result.test_results) {
     if (!test_result.passed.has_value()) {
@@ -145,6 +156,9 @@ void ReportResults(const MultiTestResult& multi_result) {
     } else if (*test_result.passed) {
       // std::cout << "Test " << i << " passed.\n";
       ++cnt_passed_tests;
+      if (i < num_public_tests) {
+        ++cnt_passed_public_tests;
+      }
     } else {
       // std::cout << "Test " << i << " failed.\n";
       ++cnt_failed_tests;
@@ -153,26 +167,52 @@ void ReportResults(const MultiTestResult& multi_result) {
   }
 
   if (debug == true){
-  std::cout << "Tests     ";
-  std::cout << "Passed: " << cnt_passed_tests << "/" << i << "   ";
-  std::cout << "Failed: " << cnt_failed_tests << "/" << i << "   ";
-  std::cout << "Crashed: " << cnt_crashed_tests << "/" << i << "\n";
+    std::cout << "Tests     ";
+    std::cout << "Passed: " << cnt_passed_tests << "/" << i << "   ";
+    std::cout << "Failed: " << cnt_failed_tests << "/" << i << "   ";
+    std::cout << "Crashed: " << cnt_crashed_tests << "/" << i << "\n";
   }
 }
 
 json calculate_metrics(json single_problem) {
 
-  int n; // for counting the sample size for each problem
-  int c; // for counting the amount of passes in each sample
+  int n_sample = 0; // for counting the sample size for each problem
+  int c_passes = 0; // for counting the amount of passes in each sample
+  std::vector<int> idx_passed_public_tests; // for sampling solns that passed public tests
 
-  n = 0;
-  c = 0;
   for (json solution : single_problem["test_results"]) {
     if (solution["passed_all_tests"] == true) {
-      ++c;
+      ++c_passes;
     }
-    ++n;
+    if (solution["passed_public_tests"] == true) {
+      idx_passed_public_tests.push_back(n_sample);
+    }
+    ++n_sample;
   }
+
+  // for (int idx : idx_passed_public_tests) {
+  //   std::cout << "\n idx (passed) = " << idx << "\n";
+  // }
+
+  std::vector<int> idx_sample_ten_at_k;
+  std::sample(idx_passed_public_tests.begin(), idx_passed_public_tests.end(), std::back_inserter(idx_sample_ten_at_k),
+                10, std::mt19937{std::random_device{}()});
+
+  // for (int idx : idx_sample_ten_at_k) {
+  //   std::cout << "\n idx (sampled) = " << idx << "\n";
+  // }
+
+  int cnt = 0;
+  int c_cluster = 0;
+  for (json solution : single_problem["test_results"]) {
+    if (std::find(idx_sample_ten_at_k.begin(), idx_sample_ten_at_k.end(), cnt) != idx_sample_ten_at_k.end()) {
+      if (solution["passed_all_tests"] == true) {
+        ++c_cluster;
+      }
+    }
+    ++cnt;
+  }
+
   // std::cout << "\n" << problem["problem"] << ":\nn = " \
   //   << n << ", c = " << c << "\n\n";
 
@@ -181,7 +221,7 @@ json calculate_metrics(json single_problem) {
 
 
   // pass@k = k@k (only 1 pass needed from the whole sample)
-  if (c >= 0) {
+  if (c_passes > 0) {
     pass_at_k_passed = true;
     ++number_passed_problems;
   }
@@ -189,14 +229,15 @@ json calculate_metrics(json single_problem) {
   
   // 10@k – implementation of appropriate clustering method needed
   // (take 10 from the sample pool, then check if at least one passed tests
-  // if (c_cluster >= 0) {
-  //   ten_at_k_passed = true;
-  // }
-  // single_problem["test_metrics"]["ten_at_k_pass"] = ten_at_k_passed;
+  if (c_cluster == idx_sample_ten_at_k.size() and n_sample != 0) {
+    ten_at_k_passed = true;
+    ++number_passed_ten_at_k_problems;
+  }
+  single_problem["test_metrics"]["ten_at_k_passed"] = ten_at_k_passed;
 
   
-  single_problem["test_metrics"]["sample_size"] = n;
-  single_problem["test_metrics"]["number_passes"] = c;
+  single_problem["test_metrics"]["sample_size"] = n_sample;
+  single_problem["test_metrics"]["number_passes"] = c_passes;
 
   return single_problem;
 }
@@ -271,6 +312,12 @@ There are 3 options for the outcome of the tests:
       } else {
         test_results["passed_all_tests"] = false;
       }
+      
+      if (cnt_passed_public_tests == num_public_tests) {
+        test_results["passed_public_tests"] = true;
+      } else {
+        test_results["passed_public_tests"] = false;
+      }
 
       
       single_problem_results["test_results"].push_back(test_results);
@@ -289,7 +336,7 @@ There are 3 options for the outcome of the tests:
   single_problem_results = calculate_metrics(single_problem_results);
 
   // exclude from output if no solutions in supported language were found
-  if (single_problem_results.size() != 1) {
+  if (single_problem_results["test_metrics"]["sample_size"] != 0) {
     results.push_back(single_problem_results);
     ++number_evaluated_problems;
   } else {
@@ -332,14 +379,16 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  double pass_at_k = deepmind::code_contests::number_passed_problems \
-    / deepmind::code_contests::number_evaluated_problems;
+  
 
   int n = 200;
   int k = deepmind::code_contests::number_evaluated_problems;
   int c = deepmind::code_contests::number_passed_problems;
-
   double codex_pass_at_k;
+
+  double pass_at_k = c / (double)k;
+
+  double ten_at_k = deepmind::code_contests::number_passed_ten_at_k_problems / (double)k;
 
   if (n - c < k) {
     codex_pass_at_k = 1.0;
@@ -353,7 +402,11 @@ int main(int argc, char* argv[]) {
   }
 
   std::cout << "\n\n\nExperiments finished.\n";
+  std::cout << "k = " << k << "\n";
+  std::cout << "c = " << c << "\n";
+  std::cout << "c_cluster = " << deepmind::code_contests::number_passed_ten_at_k_problems << "\n";
   std::cout << "Alphacode pass@k = " << pass_at_k << "\n";
+  std::cout << "Alphacode 10@k = " << ten_at_k << "\n";
   std::cout << "(n = 200) Codex pass@k = " << codex_pass_at_k << "\n";
 
   // deepmind::code_contests::calculate_metrics();
