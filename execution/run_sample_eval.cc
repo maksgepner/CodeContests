@@ -415,33 +415,63 @@ int main(int argc, char* argv[]) {
 
   
 
-  int n = 200;
+  int n = deepmind::code_contests::number_evaluated_problems;
   int k = deepmind::code_contests::number_evaluated_problems;
   int c = deepmind::code_contests::number_passed_problems;
-  double codex_pass_at_k;
+  double codex_pass_at_1;
+  double codex_pass_at_10;
+  double codex_pass_at_100;
+  double prod;
 
   double pass_at_k = c / (double)k;
 
   double ten_at_k = deepmind::code_contests::number_passed_ten_at_k_problems / (double)k;
 
+  k = 1;
   if (n - c < k) {
-    codex_pass_at_k = 1.0;
+    codex_pass_at_1 = 1.0;
   } else {
-    double prod = 1;
+    prod = 1;
     for (double i = n - c + 1; i < n + 1; i++) {
       prod = prod * (1 - k / i);
       // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
     }
-    codex_pass_at_k = 1 - prod;
+    codex_pass_at_1 = 1 - prod;
+  }
+
+  k = 10;
+  if (n - c < k) {
+    codex_pass_at_10 = 1.0;
+  } else {
+    prod = 1;
+    for (double i = n - c + 1; i < n + 1; i++) {
+      prod = prod * (1 - k / i);
+      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+    }
+    codex_pass_at_10 = 1 - prod;
+  }
+
+  k = 100;
+  if (n - c < k) {
+    codex_pass_at_100 = 1.0;
+  } else {
+    prod = 1;
+    for (double i = n - c + 1; i < n + 1; i++) {
+      prod = prod * (1 - k / i);
+      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+    }
+    codex_pass_at_100 = 1 - prod;
   }
 
   std::cout << "\n\n\nExperiments finished.\n";
-  std::cout << "k = " << k << "\n";
+  std::cout << "k = " << deepmind::code_contests::number_evaluated_problems << "\n";
   std::cout << "c = " << c << "\n";
   std::cout << "c_cluster = " << deepmind::code_contests::number_passed_ten_at_k_problems << "\n";
   std::cout << "Alphacode pass@k = " << pass_at_k << "\n";
   std::cout << "Alphacode 10@k = " << ten_at_k << "\n";
-  std::cout << "(n = 200) Codex pass@k = " << codex_pass_at_k << "\n";
+  std::cout << "Codex pass@1 = " << codex_pass_at_1 << "\n";
+  std::cout << "Codex pass@10 = " << codex_pass_at_10 << "\n";
+  std::cout << "Codex pass@100 = " << codex_pass_at_100 << "\n";
 
   // deepmind::code_contests::calculate_metrics();
   
