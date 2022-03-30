@@ -56,7 +56,12 @@ namespace {
 int cnt_crashed_tests;
 int cnt_passed_tests;
 int cnt_failed_tests;
+
+// Option for debugging
 bool debug = false;
+bool fast_run = false;
+
+
 json results;
 // json single_problem_results;
 json all_problem_samples;
@@ -100,7 +105,7 @@ std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
   for (const auto& test : problem.generated_tests()) {
     inputs.push_back(test.input());
   }
-  if (debug == true) {
+  if (fast_run == true) {
     inputs.resize(max_size);
   }
 
@@ -120,7 +125,7 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
   for (const auto& test : problem.generated_tests()) {
     outputs.push_back(test.output());
   }
-  if (debug == true) {
+  if (fast_run == true) {
     outputs.resize(max_size);
   }
   // outputs.resize(max_size);
@@ -134,11 +139,20 @@ void ReportResults(const MultiTestResult& multi_result) {
                           ProgramStatus::kSuccess
                       ? "succeeded"
                       : "failed")
-              //<< "\nThe stdout output was:\n"
-              //<< (multi_result.compilation_result.stdout)
-              //<< "\nThe stderr output was:\n"
-              //<< (multi_result.compilation_result.stderr);
+              << "\nThe compilation stdout output was:\n"
+              << (multi_result.compilation_result.stdout)
+              << "\nThe compilation stderr output was:\n"
+              << (multi_result.compilation_result.stderr)
+              // << "\nThe runtime output was:\n"
+              // << (multi_result.test_results)
+              // << "\nThe runtime stderr output was:\n"
+              // << (multi_result.test_results.stderr)
               << "\n";
+    int index = 0;
+    for (const ExecutionResult& result : multi_result.test_results) {
+      std::cout << "  Test Result " << index++ << ":\n";
+      std::cout << result << "\n\n";
+  }
   }
 
   int i = 0;
