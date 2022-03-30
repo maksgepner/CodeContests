@@ -213,8 +213,8 @@ json calculate_metrics(json single_problem) {
     ++cnt;
   }
 
-  // std::cout << "\n" << problem["problem"] << ":\nn = " \
-  //   << n << ", c = " << c << "\n\n";
+  std::cout << "\n" << single_problem["problem"] << ":\nn = " \
+    << n_sample << ", c = " << c_passes << "\n\n";
 
   bool pass_at_k_passed = false;
   bool ten_at_k_passed = false;
@@ -284,11 +284,12 @@ There are 3 options for the outcome of the tests:
   
 
     soln_lang = soln["language"].get<std::string>();
-    if (soln["is_correct"].get<bool>() == true) {
-      soln_correct = "correct";
-    } else {
-      soln_correct = "incorrect";
-    }
+    // if (soln["is_correct"].get<bool>() == true) {
+    //   soln_correct = "correct";
+    // } else {
+    //   soln_correct = "incorrect";
+    // }
+    
     // absl::string_view soln_code = soln["code"].get<absl::string_view>();
     // std::cout << "\n\n\nSolution " << i << ", code (" << soln_lang << "):\n-------------------------\n" << soln_code;
     if (soln_lang == "python3") {
@@ -296,7 +297,8 @@ There are 3 options for the outcome of the tests:
       ASSIGN_OR_RETURN(MultiTestResult result_output,
                     tester.Test(soln_code, inputs, options, outputs));
       if (debug == true) {
-        std::cout << "\nSolution " << i << " (" << soln_lang <<", " << soln_correct << "): ";
+        std::cout << "\nSolution " << i << " (" << soln_lang << "): ";
+        // std::cout << "\nSolution " << i << " (" << soln_lang <<", " << soln_correct << "): ";
       }
       ReportResults(result_output);
 
@@ -306,14 +308,24 @@ There are 3 options for the outcome of the tests:
       test_results["tests_failed"] = cnt_failed_tests;
       test_results["tests_crashed"] = cnt_crashed_tests;
 
+      int cnt_ran_tests = cnt_passed_tests + cnt_failed_tests + cnt_crashed_tests;
+      
+      if (cnt_ran_tests == 0) {
+        test_results["compilation"] = "fail";
+      } else {
+        test_results["compilation"] = "success";
+      }
+        
+
+
       // if passed all unit tests, count that as a pass in pass@k
-      if (cnt_passed_tests == cnt_passed_tests + cnt_failed_tests + cnt_crashed_tests) {
+      if (cnt_passed_tests == cnt_ran_tests and cnt_ran_tests != 0) {
         test_results["passed_all_tests"] = true;
       } else {
         test_results["passed_all_tests"] = false;
       }
       
-      if (cnt_passed_public_tests == num_public_tests) {
+      if (cnt_passed_public_tests == num_public_tests and num_public_tests != 0) {
         test_results["passed_public_tests"] = true;
       } else {
         test_results["passed_public_tests"] = false;
@@ -377,6 +389,14 @@ int main(int argc, char* argv[]) {
       !status.ok()) {
     std::cerr << "Failed: " << status.message() << std::endl;
     }
+
+    // Export the (intermediate) results
+    std::string output_filename = "test_results.json";
+
+    std::string output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
+    std::ofstream OutputFile("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/test_results.json");
+    OutputFile << deepmind::code_contests::results;
+    OutputFile.close();
   }
 
   
@@ -411,12 +431,12 @@ int main(int argc, char* argv[]) {
 
   // deepmind::code_contests::calculate_metrics();
   
-  // Export the results
-  std::string output_filename = "test_results.json";
+  // Export the (final) results
+  // std::string output_filename = "test_results.json";
 
-  std::string output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
-  std::ofstream OutputFile("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/test_results.json");
-  OutputFile << deepmind::code_contests::results;
-  OutputFile.close();
+  // std::string output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
+  // std::ofstream OutputFile("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/test_results.json");
+  // OutputFile << deepmind::code_contests::results;
+  // OutputFile.close();
 
 }
