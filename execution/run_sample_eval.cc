@@ -384,6 +384,18 @@ int main(int argc, char* argv[]) {
 	json single_problem;
   std::string line;
 
+  int n;
+  int k;
+  int c;
+  double codex_pass_at_1;
+  double codex_pass_at_10;
+  double codex_pass_at_100;
+  double prod;
+  double pass_at_k;
+  double ten_at_k;
+  std::string output_filename;
+  std::string output_path;
+
   while (std::getline(sample_solutions_file, line)) {
     single_problem = json::parse(line);
     // std::cout << "\n" << single_problem["generated_solutions"].front() << "\n";
@@ -405,63 +417,76 @@ int main(int argc, char* argv[]) {
     }
 
     // Export the (intermediate) results
-    std::string output_filename = "test_results.json";
+    output_filename = "test_results.json";
+    output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
+    std::ofstream OutputFile1(output_path);
+    OutputFile1 << deepmind::code_contests::results;
+    OutputFile1.close();
 
-    std::string output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
-    std::ofstream OutputFile("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/test_results.json");
-    OutputFile << deepmind::code_contests::results;
-    OutputFile.close();
-  }
+    n = deepmind::code_contests::number_evaluated_problems;
+    k = deepmind::code_contests::number_evaluated_problems;
+    c = deepmind::code_contests::number_passed_problems;
 
-  
+    pass_at_k = c / (double)k;
+    ten_at_k = deepmind::code_contests::number_passed_ten_at_k_problems / (double)k;
 
-  int n = deepmind::code_contests::number_evaluated_problems;
-  int k = deepmind::code_contests::number_evaluated_problems;
-  int c = deepmind::code_contests::number_passed_problems;
-  double codex_pass_at_1;
-  double codex_pass_at_10;
-  double codex_pass_at_100;
-  double prod;
-
-  double pass_at_k = c / (double)k;
-
-  double ten_at_k = deepmind::code_contests::number_passed_ten_at_k_problems / (double)k;
-
-  k = 1;
-  if (n - c < k) {
-    codex_pass_at_1 = 1.0;
-  } else {
-    prod = 1;
-    for (double i = n - c + 1; i < n + 1; i++) {
-      prod = prod * (1 - k / i);
-      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+    k = 1;
+    if (n - c < k) {
+      codex_pass_at_1 = 1.0;
+    } else {
+      prod = 1;
+      for (double i = n - c + 1; i < n + 1; i++) {
+        prod = prod * (1 - k / i);
+        // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+      }
+      codex_pass_at_1 = 1 - prod;
     }
-    codex_pass_at_1 = 1 - prod;
+
+    k = 10;
+    if (n - c < k) {
+      codex_pass_at_10 = 1.0;
+    } else {
+      prod = 1;
+      for (double i = n - c + 1; i < n + 1; i++) {
+        prod = prod * (1 - k / i);
+        // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+      }
+      codex_pass_at_10 = 1 - prod;
+    }
+
+    k = 100;
+    if (n - c < k) {
+      codex_pass_at_100 = 1.0;
+    } else {
+      prod = 1;
+      for (double i = n - c + 1; i < n + 1; i++) {
+        prod = prod * (1 - k / i);
+        // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
+      }
+      codex_pass_at_100 = 1 - prod;
+    }
+
+    json result_metrics;
+    result_metrics["k"] = deepmind::code_contests::number_evaluated_problems;
+    result_metrics["c"] = c;
+    result_metrics["c_cluster"] = deepmind::code_contests::number_passed_ten_at_k_problems;
+    result_metrics["pass_at_k"] = pass_at_k;
+    result_metrics["ten_at_k"] = pass_at_k;
+    result_metrics["codex_pass_at_1"] = codex_pass_at_1;
+    result_metrics["codex_pass_at_10"] = codex_pass_at_10;
+    result_metrics["codex_pass_at_100"] = codex_pass_at_100;
+
+
+    // Export the (intermediate) metrics
+    output_filename = "test_metrics.json";
+    output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
+    std::ofstream OutputFile2(output_path);
+    OutputFile2 << result_metrics;
+    OutputFile2.close();
+
   }
 
-  k = 10;
-  if (n - c < k) {
-    codex_pass_at_10 = 1.0;
-  } else {
-    prod = 1;
-    for (double i = n - c + 1; i < n + 1; i++) {
-      prod = prod * (1 - k / i);
-      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
-    }
-    codex_pass_at_10 = 1 - prod;
-  }
 
-  k = 100;
-  if (n - c < k) {
-    codex_pass_at_100 = 1.0;
-  } else {
-    prod = 1;
-    for (double i = n - c + 1; i < n + 1; i++) {
-      prod = prod * (1 - k / i);
-      // std::cout << "\n Codex pass@k: " << 1 - prod << "\n";
-    }
-    codex_pass_at_100 = 1 - prod;
-  }
 
   std::cout << "\n\n\nExperiments finished.\n";
   std::cout << "k = " << deepmind::code_contests::number_evaluated_problems << "\n";
@@ -472,15 +497,6 @@ int main(int argc, char* argv[]) {
   std::cout << "Codex pass@1 = " << codex_pass_at_1 << "\n";
   std::cout << "Codex pass@10 = " << codex_pass_at_10 << "\n";
   std::cout << "Codex pass@100 = " << codex_pass_at_100 << "\n";
-
-  // deepmind::code_contests::calculate_metrics();
   
-  // Export the (final) results
-  // std::string output_filename = "test_results.json";
-
-  // std::string output_path = absl::GetFlag(FLAGS_output_dir) + output_filename;
-  // std::ofstream OutputFile("/home/maksgepner/CodeGenerationAnalysis/CodeContests/execution/test_results.json");
-  // OutputFile << deepmind::code_contests::results;
-  // OutputFile.close();
 
 }
