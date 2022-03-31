@@ -243,7 +243,7 @@ json calculate_metrics(json single_problem) {
   
   // 10@k – implementation of appropriate clustering method needed
   // (take 10 from the sample pool, then check if at least one passed tests
-  if (c_cluster == idx_sample_ten_at_k.size() and n_sample != 0) {
+  if (c_cluster == idx_sample_ten_at_k.size() and n_sample != 0 and idx_sample_ten_at_k.size() != 0) {
     ten_at_k_passed = true;
     ++number_passed_ten_at_k_problems;
   }
